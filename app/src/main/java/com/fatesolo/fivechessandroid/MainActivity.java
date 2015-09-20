@@ -9,21 +9,16 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText userName;
     private EditText passWord;
-    private Socket socket;
-    private DataInputStream reader;
-    private DataOutputStream writer;
 
-    private boolean isConnect = false;
-    private static final String ConnectError = "无法连接到服务器, 请检查网络";
+    private boolean isQuit = false;
+
+    private SingletonSocket singletonSocket;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,17 +53,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.login:
-                send("/Login " + userName.getText().toString() + " " + passWord.getText().toString());
-                break;
-            case R.id.register:
-                send("/Register " + userName.getText().toString() + " " + passWord.getText().toString());
-                break;
-            case R.id.exit:
-                isConnect = false;
-
-                break;
+        try {
+            switch (v.getId()) {
+                case R.id.login:
+                    singletonSocket.sendMsg("/Login " + userName.getText().toString() + " " + passWord.getText().toString());
+                    break;
+                case R.id.register:
+                    singletonSocket.sendMsg("/Register " + userName.getText().toString() + " " + passWord.getText().toString());
+                    break;
+                case R.id.exit:
+                    singletonSocket.disconnect();
+                    isQuit = true;
+                    break;
+            }
+        } catch (IOException e) {
+            Toast.makeText(MainActivity.this, "连接失败, 请重试", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -83,58 +82,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void connect() {
         AsyncTask<Void, String, Void> conn = new AsyncTask<Void, String, Void>() {
+
             @Override
             protected Void doInBackground(Void... params) {
+                singletonSocket = SingletonSocket.getInstance();
 
                 try {
-                    socket = new Socket("192.168.132.136", 7110);
-                    reader = new DataInputStream(socket.getInputStream());
-                    writer = new DataOutputStream(socket.getOutputStream());
-                    isConnect = true;
+                    singletonSocket.connect();
 
-                    while(isConnect) {
-                        publishProgress(reader.readUTF());
+                    while (!isQuit) {
+                        publishProgress(singletonSocket.recvMsg());
                     }
                 } catch (IOException e) {
-                    isConnect = false;
-                    Toast.makeText(MainActivity.this, ConnectError, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "连接失败, 请重试", Toast.LENGTH_SHORT).show();
                 }
+
                 return null;
             }
 
             @Override
-            protected void onPostExecute(Void aVoid) {
-                try {
-                    socket.close();
-                    reader.close();
-                    writer.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
             protected void onProgressUpdate(String... values) {
-                receive(values[0]);
+                Toast.makeText(MainActivity.this, values[0], Toast.LENGTH_SHORT).show();
             }
         };
         conn.execute();
-    }
-
-    private void receive(String msg) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
-    }
-
-    private void send(String msg) {
-        try {
-            if(isConnect) {
-                writer.writeUTF(msg);
-            } else {
-                throw new IOException();
-            }
-        } catch (IOException e) {
-            isConnect = false;
-            Toast.makeText(this, ConnectError, Toast.LENGTH_SHORT).show();
-        }
     }
 }
