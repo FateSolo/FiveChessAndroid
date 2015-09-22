@@ -1,6 +1,5 @@
 package com.fatesolo.fivechessandroid;
 
-import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -18,7 +17,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean isQuit = false;
 
-    private SingletonSocket singletonSocket;
+    private SingletonSocket singletonSocket = null;
+
+    private FiveChessThread fiveChessThread = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +27,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         init();
-        connect();
     }
 
     @Override
@@ -56,6 +56,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             switch (v.getId()) {
                 case R.id.login:
+                    if(!singletonSocket.isConnect()) {
+
+                    }
                     singletonSocket.sendMsg("/Login " + userName.getText().toString() + " " + passWord.getText().toString());
                     break;
                 case R.id.register:
@@ -78,33 +81,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.login).setOnClickListener(this);
         findViewById(R.id.register).setOnClickListener(this);
         findViewById(R.id.exit).setOnClickListener(this);
+
+        singletonSocket = SingletonSocket.getInstance();
+
+        fiveChessThread = new FiveChessThread(this);
+        fiveChessThread.execute();
     }
 
     private void connect() {
-        AsyncTask<Void, String, Void> conn = new AsyncTask<Void, String, Void>() {
 
-            @Override
-            protected Void doInBackground(Void... params) {
-                singletonSocket = SingletonSocket.getInstance();
-
-                try {
-                    singletonSocket.connect();
-
-                    while (!isQuit) {
-                        publishProgress(singletonSocket.recvMsg());
-                    }
-                } catch (IOException e) {
-                    Toast.makeText(MainActivity.this, "连接失败, 请重试", Toast.LENGTH_SHORT).show();
-                }
-
-                return null;
-            }
-
-            @Override
-            protected void onProgressUpdate(String... values) {
-                Toast.makeText(MainActivity.this, values[0], Toast.LENGTH_SHORT).show();
-            }
-        };
-        conn.execute();
     }
 }

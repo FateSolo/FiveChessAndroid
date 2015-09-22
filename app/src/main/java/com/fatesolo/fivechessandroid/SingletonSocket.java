@@ -25,6 +25,10 @@ public class SingletonSocket {
     private SingletonSocket() {
     }
 
+    public boolean isConnect() {
+        return isConnect;
+    }
+
     public void connect() throws IOException {
         try {
             socket = new Socket("192.168.132.136", 7110);
@@ -54,10 +58,6 @@ public class SingletonSocket {
 
     public void sendMsg(String msg) throws IOException {
         try {
-            if (!isConnect) {
-                connect();
-            }
-
             writer.write(msg);
             writer.flush();
         } catch (IOException e) {
