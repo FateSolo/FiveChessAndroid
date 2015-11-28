@@ -1,5 +1,9 @@
 package com.fatesolo.fivechessandroid;
 
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
@@ -10,40 +14,52 @@ import android.widget.Toast;
 
 import java.io.IOException;
 
+import de.greenrobot.event.EventBus;
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     private EditText userName;
     private EditText passWord;
 
-    private boolean isQuit = false;
+    private FiveChessService.FiveChessBinder binder;
 
-    private SingletonSocket singletonSocket = null;
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            binder = (FiveChessService.FiveChessBinder) service;
+        }
 
-    private FiveChessThread fiveChessThread = null;
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        EventBus.getDefault().register(this);
         init();
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -56,17 +72,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             switch (v.getId()) {
                 case R.id.login:
-                    if(!singletonSocket.isConnect()) {
-
-                    }
-                    singletonSocket.sendMsg("/Login " + userName.getText().toString() + " " + passWord.getText().toString());
+                    binder.getService().sendMsg("/Login " + userName.getText().toString() + " " + passWord.getText().toString());
                     break;
                 case R.id.register:
-                    singletonSocket.sendMsg("/Register " + userName.getText().toString() + " " + passWord.getText().toString());
+                    binder.getService().sendMsg("/Register " + userName.getText().toString() + " " + passWord.getText().toString());
                     break;
                 case R.id.exit:
-                    singletonSocket.disconnect();
-                    isQuit = true;
+
                     break;
             }
         } catch (IOException e) {
@@ -82,13 +94,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         findViewById(R.id.register).setOnClickListener(this);
         findViewById(R.id.exit).setOnClickListener(this);
 
-        singletonSocket = SingletonSocket.getInstance();
-
-        fiveChessThread = new FiveChessThread(this);
-        fiveChessThread.execute();
+        Intent intent = new Intent(this, FiveChessService.class);
+        startService(intent);
+        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
-    private void connect() {
+    public void onEventMainThread(String msg) {
+        String[] list = msg.split(" ");
 
+        switch (list[0]) {
+
+        }
     }
+
 }
