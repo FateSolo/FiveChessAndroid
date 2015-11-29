@@ -19,7 +19,6 @@ public class FiveChessService extends Service {
     private OutputStreamWriter writer = null;
 
     private boolean isConnect = false;
-    private Thread thread = null;
 
     private FiveChessBinder binder = new FiveChessBinder();
 
@@ -65,8 +64,7 @@ public class FiveChessService extends Service {
 
             isConnect = true;
 
-            thread = new Thread(new FiveChessThread());
-            thread.start();
+            new Thread(new FiveChessThread()).start();
         } catch (IOException e) {
             disconnect();
             throw new IOException();
@@ -85,10 +83,6 @@ public class FiveChessService extends Service {
         }
 
         isConnect = false;
-
-        if (thread.isAlive()) {
-            // 待验证, 当子线程被阻塞在recvMsg()中的reader.read(data)时, 在主线程中使用reader.close()关闭之, 会产生的结果。
-        }
     }
 
     public void sendMsg(String msg) throws IOException {
@@ -129,12 +123,12 @@ public class FiveChessService extends Service {
 
         @Override
         public void run() {
-            while (isConnect) {
-                try {
+            try {
+                while (isConnect) {
                     EventBus.getDefault().post(recvMsg());
-                } catch (IOException e) {
-                    EventBus.getDefault().post("/ConnectError");
                 }
+            } catch (IOException e) {
+                EventBus.getDefault().post("/ConnectError");
             }
         }
 
