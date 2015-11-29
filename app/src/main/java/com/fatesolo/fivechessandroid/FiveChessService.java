@@ -19,6 +19,7 @@ public class FiveChessService extends Service {
     private OutputStreamWriter writer = null;
 
     private boolean isConnect = false;
+    private Thread thread = null;
 
     private FiveChessBinder binder = new FiveChessBinder();
 
@@ -31,10 +32,8 @@ public class FiveChessService extends Service {
 
         try {
             connect();
-
-            new Thread(new FiveChessThread()).start();
         } catch (IOException e) {
-            EventBus.getDefault().post(1);
+            EventBus.getDefault().post("/ConnectError");
         }
     }
 
@@ -45,7 +44,7 @@ public class FiveChessService extends Service {
         try {
             disconnect();
         } catch (IOException e) {
-            EventBus.getDefault().post(1);
+            EventBus.getDefault().post("/ConnectError");
         }
     }
 
@@ -54,9 +53,9 @@ public class FiveChessService extends Service {
         return binder;
     }
 
-    public boolean isConnect() {
-        return isConnect;
-    }
+//    public boolean isConnect() {
+//        return isConnect;
+//    }
 
     public void connect() throws IOException {
         try {
@@ -65,6 +64,9 @@ public class FiveChessService extends Service {
             writer = new OutputStreamWriter(socket.getOutputStream());
 
             isConnect = true;
+
+            thread = new Thread(new FiveChessThread());
+            thread.start();
         } catch (IOException e) {
             disconnect();
             throw new IOException();
@@ -83,10 +85,18 @@ public class FiveChessService extends Service {
         }
 
         isConnect = false;
+
+        if (thread.isAlive()) {
+            // 待验证, 当子线程被阻塞在recvMsg()中的reader.read(data)时, 在主线程中使用reader.close()关闭之, 会产生的结果。
+        }
     }
 
     public void sendMsg(String msg) throws IOException {
         try {
+            if (!isConnect) {
+                connect();
+            }
+
             writer.write(msg);
             writer.flush();
         } catch (IOException e) {
@@ -119,11 +129,11 @@ public class FiveChessService extends Service {
 
         @Override
         public void run() {
-            while (isConnect()) {
+            while (isConnect) {
                 try {
                     EventBus.getDefault().post(recvMsg());
                 } catch (IOException e) {
-                    EventBus.getDefault().post(1);
+                    EventBus.getDefault().post("/ConnectError");
                 }
             }
         }

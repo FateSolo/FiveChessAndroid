@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     break;
             }
         } catch (IOException e) {
-            Toast.makeText(MainActivity.this, "连接失败, 请重试", Toast.LENGTH_SHORT).show();
+            EventBus.getDefault().post("/ConnectError");
         }
     }
 
@@ -103,7 +103,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String[] list = msg.split(" ");
 
         switch (list[0]) {
-
+            case "/ConnectError":
+                Toast.makeText(MainActivity.this, "网络连接错误, 请检查您的网络", Toast.LENGTH_SHORT).show();
+                break;
         }
     }
 
