@@ -29,11 +29,7 @@ public class FiveChessService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        try {
-            connect();
-        } catch (IOException e) {
-            EventBus.getDefault().post("/ConnectError");
-        }
+        connect();
     }
 
     @Override
@@ -56,22 +52,15 @@ public class FiveChessService extends Service {
 //        return isConnect;
 //    }
 
-    public void connect() throws IOException {
-        try {
-            socket = new Socket("192.168.132.144", 7110);
-            reader = new InputStreamReader(socket.getInputStream());
-            writer = new OutputStreamWriter(socket.getOutputStream());
+    public void connect() {
+        isConnect = true;
 
-            isConnect = true;
-
-            new Thread(new FiveChessThread()).start();
-        } catch (IOException e) {
-            disconnect();
-            throw new IOException();
-        }
+        new Thread(new FiveChessThread()).start();
     }
 
     public void disconnect() throws IOException {
+        isConnect = false;
+
         if (socket != null) {
             socket.close();
         }
@@ -81,8 +70,6 @@ public class FiveChessService extends Service {
         if (writer != null) {
             writer.close();
         }
-
-        isConnect = false;
     }
 
     public void sendMsg(String msg) throws IOException {
@@ -124,8 +111,20 @@ public class FiveChessService extends Service {
         @Override
         public void run() {
             try {
+                socket = new Socket("192.168.132.144", 7110);
+                reader = new InputStreamReader(socket.getInputStream());
+                writer = new OutputStreamWriter(socket.getOutputStream());
+
                 while (isConnect) {
-                    EventBus.getDefault().post(recvMsg());
+                    String msg = recvMsg();
+                    int length = msg.length();
+
+                    for(int tmp, curr = 0; curr != length; curr += tmp) {
+                        tmp = Integer.parseInt(msg.substring(curr, curr + 4));
+                        curr += 4;
+
+                        EventBus.getDefault().post(msg.substring(curr, curr + tmp));
+                    }
                 }
             } catch (IOException e) {
                 EventBus.getDefault().post("/ConnectError");

@@ -106,7 +106,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void onEventMainThread(String msg) {
         String[] list = msg.split(" ");
-
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         switch (list[0]) {
             case "/ConnectError":
                 Toast.makeText(MainActivity.this, "网络连接错误, 请检查您的网络", Toast.LENGTH_SHORT).show();
