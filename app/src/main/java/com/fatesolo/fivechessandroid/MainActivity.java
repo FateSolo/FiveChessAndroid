@@ -13,6 +13,8 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import de.greenrobot.event.EventBus;
 
@@ -75,15 +77,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         try {
+            String username = userName.getText().toString();
+            String password = passWord.getText().toString();
+
             switch (v.getId()) {
                 case R.id.login:
-                    binder.getService().sendMsg("/Login " + userName.getText().toString() + " " + passWord.getText().toString());
+                    if (!stringTest(4, 10, username)) {
+                        Toast.makeText(MainActivity.this, "用户名无效, 请输入长度在4-10位之间的字母与数字组合", Toast.LENGTH_SHORT).show();
+                    } else if (!stringTest(6, 10, password)) {
+                        Toast.makeText(MainActivity.this, "密码无效, 请输入长度在6-10位之间的字母与数字组合 ", Toast.LENGTH_SHORT).show();
+                    } else {
+                        binder.getService().sendMsg("/Login " + username + " " + password);
+                    }
                     break;
                 case R.id.register:
-                    binder.getService().sendMsg("/Register " + userName.getText().toString() + " " + passWord.getText().toString());
+                    if (!stringTest(4, 10, username)) {
+                        Toast.makeText(MainActivity.this, "用户名无效, 请输入长度在4-10位之间的字母与数字组合", Toast.LENGTH_SHORT).show();
+                    } else if (!stringTest(6, 10, password)) {
+                        Toast.makeText(MainActivity.this, "密码无效, 请输入长度在6-10位之间的字母与数字组合 ", Toast.LENGTH_SHORT).show();
+                    } else {
+                        binder.getService().sendMsg("/Register " + username + " " + password);
+                    }
                     break;
                 case R.id.exit:
+                    unbindService(connection);
 
+                    Intent intent = new Intent(this, FiveChessService.class);
+                    stopService(intent);
+
+                    finish();
                     break;
             }
         } catch (IOException e) {
@@ -101,17 +123,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Intent intent = new Intent(this, FiveChessService.class);
         startService(intent);
+
         bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     public void onEventMainThread(String msg) {
         String[] list = msg.split(" ");
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
+
         switch (list[0]) {
             case "/ConnectError":
                 Toast.makeText(MainActivity.this, "网络连接错误, 请检查您的网络", Toast.LENGTH_SHORT).show();
                 break;
+            case "/UsernameNotExist":
+                Toast.makeText(MainActivity.this, "用户名不存在", Toast.LENGTH_SHORT).show();
+                break;
+            case "/PasswordError":
+                Toast.makeText(MainActivity.this, "密码错误", Toast.LENGTH_SHORT).show();
+                break;
+            case "/UserHasLogged":
+                Toast.makeText(MainActivity.this, "用户已经登陆", Toast.LENGTH_SHORT).show();
+                break;
+            case "/UsernameExist":
+                Toast.makeText(MainActivity.this, "用户名已存在", Toast.LENGTH_SHORT).show();
+                break;
+
         }
     }
 
+    private boolean stringTest(int min, int max, String s) {
+        String pattern = String.format("^[a-z0-9A-Z]{%d,%d}$", min, max);
+        Pattern pat = Pattern.compile(pattern);
+        Matcher mat = pat.matcher(s);
+
+        return mat.find();
+    }
 }
