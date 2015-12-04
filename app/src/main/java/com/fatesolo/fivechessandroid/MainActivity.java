@@ -12,7 +12,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -108,7 +107,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     finish();
                     break;
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             EventBus.getDefault().post("/ConnectError");
         }
     }

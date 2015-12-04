@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
@@ -38,7 +37,7 @@ public class FiveChessService extends Service {
 
         try {
             disconnect();
-        } catch (IOException e) {
+        } catch (Exception e) {
             EventBus.getDefault().post("/ConnectError");
         }
     }
@@ -58,7 +57,7 @@ public class FiveChessService extends Service {
         new Thread(new FiveChessThread()).start();
     }
 
-    public void disconnect() throws IOException {
+    public void disconnect() throws Exception {
         isConnect = false;
 
         if (socket != null) {
@@ -72,7 +71,7 @@ public class FiveChessService extends Service {
         }
     }
 
-    public void sendMsg(String msg) throws IOException {
+    public void sendMsg(String msg) throws Exception {
         try {
             if (!isConnect) {
                 connect();
@@ -80,21 +79,21 @@ public class FiveChessService extends Service {
 
             writer.write(msg);
             writer.flush();
-        } catch (IOException e) {
+        } catch (Exception e) {
             disconnect();
-            throw new IOException();
+            throw new Exception();
         }
     }
 
-    public String recvMsg() throws IOException {
+    public String recvMsg() throws Exception {
         try {
             char[] data = new char[1024];
             int length = reader.read(data);
 
             return new String(data, 0, length);
-        } catch (IOException e) {
+        } catch (Exception e) {
             disconnect();
-            throw new IOException();
+            throw new Exception();
         }
     }
 
@@ -126,7 +125,7 @@ public class FiveChessService extends Service {
                         EventBus.getDefault().post(msg.substring(curr, curr + tmp));
                     }
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 EventBus.getDefault().post("/ConnectError");
             }
         }
