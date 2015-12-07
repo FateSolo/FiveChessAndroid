@@ -1,6 +1,7 @@
 package com.fatesolo.fivechessandroid;
 
 public class UserInformation {
+
     private String nickname;
     private int win;
     private int lose;
@@ -47,4 +48,5 @@ public class UserInformation {
     public void setDraw(int draw) {
         this.draw = draw;
     }
+
 }

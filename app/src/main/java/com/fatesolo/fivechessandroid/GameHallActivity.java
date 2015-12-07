@@ -5,12 +5,24 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import de.greenrobot.event.EventBus;
+
 public class GameHallActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game_hall);
+
+        EventBus.getDefault().register(this);
+        init();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        EventBus.getDefault().unregister(this);
     }
 
     @Override
@@ -34,4 +46,9 @@ public class GameHallActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    private void init() {
+
+    }
+
 }
