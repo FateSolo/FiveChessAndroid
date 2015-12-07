@@ -19,6 +19,8 @@ public class FiveChessService extends Service {
 
     private boolean isConnect = false;
 
+    private UserInformation user = null;
+
     private FiveChessBinder binder = new FiveChessBinder();
 
     public FiveChessService() {
@@ -95,6 +97,14 @@ public class FiveChessService extends Service {
             disconnect();
             throw new Exception();
         }
+    }
+
+    public UserInformation getUser() {
+        return user;
+    }
+
+    public void setUser(UserInformation user) {
+        this.user = user;
     }
 
     class FiveChessBinder extends Binder {
