@@ -51,4 +51,8 @@ public class GameHallActivity extends AppCompatActivity {
 
     }
 
+    public void onEventMainThread(String msg) {
+
+    }
+
 }

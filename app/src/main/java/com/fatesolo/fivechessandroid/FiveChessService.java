@@ -120,7 +120,7 @@ public class FiveChessService extends Service {
         @Override
         public void run() {
             try {
-                socket = new Socket("192.168.132.144", 7110);
+                socket = new Socket("192.168.132.145", 7110);
                 reader = new InputStreamReader(socket.getInputStream());
                 writer = new OutputStreamWriter(socket.getOutputStream());
 
