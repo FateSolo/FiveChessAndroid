@@ -80,28 +80,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        try {
-            String username = userName.getText().toString();
-            String password = passWord.getText().toString();
+        Intent intent = new Intent(this, FiveChessService.class);
 
-            switch (v.getId()) {
-                case R.id.login:
-                    if (stringTest()) {
-                        binder.getService().sendMsg("/Login " + username + " " + password);
-                    }
-                    break;
-                case R.id.register:
-                    if (stringTest()) {
-                        binder.getService().sendMsg("/Register " + username + " " + password);
-                    }
-                    break;
-                case R.id.exit:
-                    isExit.show();
-                    break;
-            }
-        } catch (Exception e) {
-            EventBus.getDefault().post("/ConnectError");
+        String username = userName.getText().toString();
+        String password = passWord.getText().toString();
+
+        switch (v.getId()) {
+            case R.id.login:
+                if (stringTest()) {
+                    intent.putExtra("type", "/Login ");
+                }
+                break;
+            case R.id.register:
+                if (stringTest()) {
+                    intent.putExtra("type", "/Register ");
+                }
+                break;
+            case R.id.exit:
+                isExit.show();
+                return;
         }
+
+        intent.putExtra("username", username);
+        intent.putExtra("password", password);
+
+        startService(intent);
+
+        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -118,10 +123,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         @Override
         public void onClick(DialogInterface dialog, int which) {
             if (which == AlertDialog.BUTTON_POSITIVE) {
-                unbindService(connection);
+                if (FiveChessService.isConnect()) {
+                    unbindService(connection);
 
-                Intent intent = new Intent(MainActivity.this, FiveChessService.class);
-                stopService(intent);
+                    Intent intent = new Intent(MainActivity.this, FiveChessService.class);
+                    stopService(intent);
+                }
 
                 finish();
             }
@@ -143,11 +150,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         isExit.setButton(AlertDialog.BUTTON_POSITIVE, "确定", listener);
         isExit.setButton(AlertDialog.BUTTON_NEGATIVE, "取消", listener);
-
-        Intent intent = new Intent(this, FiveChessService.class);
-        startService(intent);
-
-        bindService(intent, connection, BIND_AUTO_CREATE);
     }
 
     public void onEventMainThread(String msg) {

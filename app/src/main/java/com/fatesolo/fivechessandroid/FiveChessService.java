@@ -7,7 +7,9 @@ import android.os.IBinder;
 
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
 
 import de.greenrobot.event.EventBus;
 
@@ -17,7 +19,7 @@ public class FiveChessService extends Service {
     private InputStreamReader reader = null;
     private OutputStreamWriter writer = null;
 
-    private boolean isConnect = false;
+    private static boolean isConnect = false;
 
     private UserInformation user = null;
 
@@ -27,21 +29,17 @@ public class FiveChessService extends Service {
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        connect(intent.getStringExtra("type"), intent.getStringExtra("username"), intent.getStringExtra("password"));
 
-        connect();
+        return super.onStartCommand(intent, flags, startId);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
 
-        try {
-            disconnect();
-        } catch (Exception e) {
-            EventBus.getDefault().post("/ConnectError");
-        }
+        disconnect();
     }
 
     @Override
@@ -49,54 +47,50 @@ public class FiveChessService extends Service {
         return binder;
     }
 
-//    public boolean isConnect() {
-//        return isConnect;
-//    }
+    public static boolean isConnect() {
+        return isConnect;
+    }
 
-    public void connect() {
+    public void connect(String type, String username, String password) {
         isConnect = true;
 
-        new Thread(new FiveChessThread()).start();
+        new Thread(new FiveChessThread(type + username + " " + password)).start();
     }
 
-    public void disconnect() throws Exception {
+    public void disconnect() {
         isConnect = false;
 
-        if (socket != null) {
-            socket.close();
-        }
-        if (reader != null) {
-            reader.close();
-        }
-        if (writer != null) {
-            writer.close();
+        try {
+            if (socket != null) {
+                socket.close();
+            }
+            if (reader != null) {
+                reader.close();
+            }
+            if (writer != null) {
+                writer.close();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void sendMsg(String msg) throws Exception {
+    public void sendMsg(String msg) {
         try {
-            if (!isConnect) {
-                connect();
-            }
-
             writer.write(msg);
             writer.flush();
         } catch (Exception e) {
+            EventBus.getDefault().post("/ConnectError");
+
             disconnect();
-            throw new Exception();
         }
     }
 
     public String recvMsg() throws Exception {
-        try {
-            char[] data = new char[1024];
-            int length = reader.read(data);
+        char[] data = new char[1024];
+        int length = reader.read(data);
 
-            return new String(data, 0, length);
-        } catch (Exception e) {
-            disconnect();
-            throw new Exception();
-        }
+        return new String(data, 0, length);
     }
 
     public UserInformation getUser() {
@@ -117,18 +111,30 @@ public class FiveChessService extends Service {
 
     class FiveChessThread implements Runnable {
 
+        private String instruction;
+
+        public FiveChessThread(String instruction) {
+            this.instruction = instruction;
+        }
+
         @Override
         public void run() {
             try {
-                socket = new Socket("192.168.132.145", 7110);
+                socket = new Socket();
+
+                SocketAddress socketAddress = new InetSocketAddress("192.168.132.147", 7110);
+                socket.connect(socketAddress, 3000);
+
                 reader = new InputStreamReader(socket.getInputStream());
                 writer = new OutputStreamWriter(socket.getOutputStream());
+
+                sendMsg(instruction);
 
                 while (isConnect) {
                     String msg = recvMsg();
                     int length = msg.length();
 
-                    for(int tmp, curr = 0; curr != length; curr += tmp) {
+                    for (int tmp, curr = 0; curr != length; curr += tmp) {
                         tmp = Integer.parseInt(msg.substring(curr, curr + 4));
                         curr += 4;
 
@@ -137,6 +143,8 @@ public class FiveChessService extends Service {
                 }
             } catch (Exception e) {
                 EventBus.getDefault().post("/ConnectError");
+
+                disconnect();
             }
         }
 
