@@ -1,5 +1,4 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -14,20 +13,20 @@
         android:gravity="center">
 
         <TextView
+            android:id="@+id/textUserName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/username"
-            android:id="@+id/textUserName" />
+            android:background="@drawable/username" />
 
         <EditText
+            android:id="@+id/userName"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
-            android:maxLength="10"
-            android:inputType="text"
-            android:gravity="center"
-            android:background="@drawable/button"
             android:layout_toRightOf="@+id/textUserName"
-            android:id="@+id/userName" />
+            android:background="@drawable/button"
+            android:gravity="center"
+            android:inputType="text"
+            android:maxLength="10" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -37,21 +36,21 @@
         android:gravity="center">
 
         <TextView
+            android:id="@+id/textPassWord"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:background="@drawable/password"
-            android:id="@+id/textPassWord" />
+            android:background="@drawable/password" />
 
         <EditText
+            android:id="@+id/passWord"
             android:layout_width="200dp"
             android:layout_height="wrap_content"
             android:layout_marginLeft="25dp"
-            android:maxLength="10"
-            android:inputType="textPassword"
-            android:gravity="center"
-            android:background="@drawable/button"
             android:layout_toRightOf="@+id/textPassWord"
-            android:id="@+id/passWord" />
+            android:background="@drawable/button"
+            android:gravity="center"
+            android:inputType="textPassword"
+            android:maxLength="10" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -60,26 +59,26 @@
         android:layout_marginTop="20dp">
 
         <Button
+            android:id="@+id/login"
             android:layout_width="90dp"
             android:layout_height="40dp"
             android:layout_marginLeft="25dp"
-            android:background="@drawable/login"
-            android:id="@+id/login" />
+            android:background="@drawable/login" />
 
         <Button
+            android:id="@+id/register"
             android:layout_width="90dp"
             android:layout_height="40dp"
             android:layout_centerHorizontal="true"
-            android:background="@drawable/register"
-            android:id="@+id/register" />
+            android:background="@drawable/register" />
 
         <Button
+            android:id="@+id/exit"
             android:layout_width="90dp"
             android:layout_height="40dp"
             android:layout_alignParentRight="true"
             android:layout_marginRight="25dp"
-            android:background="@drawable/exit"
-            android:id="@+id/exit" />
+            android:background="@drawable/exit" />
     </RelativeLayout>
 
 </LinearLayout>
